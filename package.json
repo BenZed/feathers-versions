@@ -1,7 +1,7 @@
 {
   "name": "feathers-versions",
   "version": "0.1.0",
-  "description": "Model structure/validation for feathers.js",
+  "description": "A versioning service for feathers.js",
   "main": "lib",
   "scripts": {
     "test": "mocha --compilers js:babel-core/register 'test/**/*.@(js|jsx)'",
