@@ -1,0 +1,44 @@
+{
+  "name": "feathers-versions",
+  "version": "0.1.0",
+  "description": "Model structure/validation for feathers.js",
+  "main": "lib",
+  "scripts": {
+    "test": "mocha --compilers js:babel-core/register 'test/**/*.@(js|jsx)'",
+    "develop-client": "webpack-dev-server --config config/webpack.js",
+    "develop-server": "node_modules/.bin/babel ./src-dev/server --watch --out-dir dev-server  & ./node_modules/.bin/nodemon --watch dev-server dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BenZed/feathers-versions.git"
+  },
+  "keywords": [
+    "feathers",
+    "version"
+  ],
+  "author": "Ben Gaumond",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BenZed/feathers-versions/issues"
+  },
+  "homepage": "https://github.com/BenZed/feathers-versions#readme",
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.18.0",
+    "babel-eslint": "^7.1.1",
+    "babel-loader": "^6.2.10",
+    "babel-preset-es2015-node": "^6.1.1",
+    "babel-preset-stage-0": "^6.16.0",
+    "body-parser": "^1.15.2",
+    "chia": "0.0.1",
+    "eslint": "^3.13.1",
+    "eslint-plugin-react": "^6.9.0",
+    "feathers": "^2.0.3",
+    "feathers-configuration": "^0.4.1",
+    "feathers-errors": "^2.5.0",
+    "feathers-hooks": "^1.7.1",
+    "feathers-rest": "^1.6.0",
+    "mocha": "^3.2.0",
+    "nodemon": "^1.11.0",
+  }
+}
