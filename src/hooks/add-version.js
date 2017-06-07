@@ -74,7 +74,6 @@ export default function(options = {}) {
   return async function(hook) {
 
     const { params, result, app } = hook
-    const { provider } = params
     const service = this
 
     checkContext(hook, 'after', ['update', 'patch', 'create'], 'add-version')
