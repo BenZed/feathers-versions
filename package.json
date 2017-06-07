@@ -4,9 +4,11 @@
   "description": "A versioning service for feathers.js",
   "main": "lib",
   "scripts": {
-    "test": "mocha --compilers js:babel-core/register 'test/**/*.@(js|jsx)'",
-    "develop-client": "webpack-dev-server --config config/webpack.js",
-    "develop-server": "node_modules/.bin/babel ./src-dev/server --watch --out-dir dev-server  & ./node_modules/.bin/nodemon --watch dev-server dev-server"
+    "test": "mocha --require babel-register --require babel-polyfill 'test/**/*test.js'",
+    "test:watch": "mocha --require babel-register --watch --require babel-polyfill 'test/**/*test.js'",
+    "build": "rm -rf lib; mkdir lib; node_modules/.bin/babel src --out-dir lib --plugins transform-runtime",
+    "build:watch": "npm run build -- --watch",
+    "prepublish": "npm run test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -23,22 +25,29 @@
   },
   "homepage": "https://github.com/BenZed/feathers-versions#readme",
   "devDependencies": {
-    "babel": "^6.5.2",
-    "babel-cli": "^6.18.0",
-    "babel-eslint": "^7.1.1",
-    "babel-loader": "^6.2.10",
-    "babel-preset-es2015-node": "^6.1.1",
-    "babel-preset-stage-0": "^6.16.0",
-    "body-parser": "^1.15.2",
-    "chia": "0.0.1",
-    "eslint": "^3.13.1",
-    "eslint-plugin-react": "^6.9.0",
-    "feathers": "^2.0.3",
+    "babel-cli": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-env": "^1.5.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.24.1",
+    "body-parser": "^1.17.2",
+    "chai": "^4.0.2",
+    "cli-clear": "^1.0.4",
+    "eslint": "^3.19.0",
+    "eslint-plugin-react": "^7.0.1",
+    "feathers": "^2.1.3",
     "feathers-configuration": "^0.4.1",
-    "feathers-errors": "^2.5.0",
-    "feathers-hooks": "^1.7.1",
-    "feathers-rest": "^1.6.0",
-    "mocha": "^3.2.0",
-    "nodemon": "^1.11.0",
+    "feathers-rest": "^1.7.2",
+    "mocha": "^3.4.2",
+    "nodemon": "^1.11.0"
+  },
+  "dependencies": {
+    "deep-equal": "^1.0.1",
+    "feathers-hooks": "^2.0.1",
+    "feathers-memory": "^1.1.0",
+    "feathers-hooks-common": "^3.5.1",
+    "is-explicit": "^1.1.0"
   }
 }
