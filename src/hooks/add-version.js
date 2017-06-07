@@ -93,11 +93,6 @@ export default function(options = {}) {
     if (versions == service)
       throw new Error('You can\'t add a version of a version document, smartass.')
 
-    //If there is a provider but no user, then this hook is likely in the wrong
-    //order.
-    if (provider && !user)
-      throw new BadRequest('Not Authenticated.')
-
     const serviceIdField = service.id
     const id = result[serviceIdField]
     const query = { document: idType(id), service: serviceName }

@@ -14,7 +14,7 @@ const DefaultConfig = {
 
   serviceName: 'versions',
 
-  userEntityField: 'users',
+  userEntityField: 'user',
   userIdField: '_id'
 
 }
