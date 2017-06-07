@@ -207,3 +207,9 @@ ___
 ## ```clearVersions``` Hook Configuration
 
 Currently, the ```clearVersions``` hook doesn't take a configuration.
+
+___
+
+# Further Considerations
+
+- New versions will not be created if none of the masked data has been changed.
