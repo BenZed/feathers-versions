@@ -1,11 +1,11 @@
 {
   "name": "feathers-versions",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A versioning service for feathers.js",
   "main": "lib",
   "scripts": {
-    "test": "mocha --require babel-register --require babel-polyfill 'test/**/*test.js'",
-    "test:watch": "mocha --require babel-register --watch --require babel-polyfill 'test/**/*test.js'",
+    "test": "mocha --require babel-register --require babel-polyfill 'test/*test.js'",
+    "test:watch": "mocha --require babel-register --watch --require babel-polyfill 'test/*test.js'",
     "build": "rm -rf lib; mkdir lib; node_modules/.bin/babel src --out-dir lib --plugins transform-runtime",
     "build:watch": "npm run build -- --watch",
     "prepublish": "npm run test && npm run build"
@@ -16,7 +16,9 @@
   },
   "keywords": [
     "feathers",
-    "version"
+    "version",
+    "history",
+    "papertrail"
   ],
   "author": "Ben Gaumond",
   "license": "ISC",
@@ -34,6 +36,7 @@
     "babel-register": "^6.24.1",
     "body-parser": "^1.17.2",
     "chai": "^4.0.2",
+    "chai-as-promised": "^6.0.0",
     "cli-clear": "^1.0.4",
     "eslint": "^3.19.0",
     "eslint-plugin-react": "^7.0.1",

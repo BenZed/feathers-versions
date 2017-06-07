@@ -82,6 +82,9 @@ export default function(options = {}) {
     const serviceName = nameOfService(app, service)
     const versions = getVersionsService(app)
 
+    if (versions === null)
+      throw new Error('Version service not initialized.')
+
     const { userEntityField, userIdField, idType } = versions[CONFIG]
 
     const user = params[userEntityField]

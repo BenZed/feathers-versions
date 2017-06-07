@@ -17,6 +17,9 @@ export default function() {
 
     const versions = getVersionsService(app)
 
+    if (versions === null)
+      throw new Error('Version service not initialized.')
+
     const query = {
       document: versions[CONFIG].idType(id),
       service: nameOfService(app, service)
