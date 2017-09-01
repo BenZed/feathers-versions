@@ -1,8 +1,8 @@
-import { BadRequest } from 'feathers-errors'
+import { BadRequest, GeneralError } from 'feathers-errors'
 import equal from 'deep-equal'
 import is from 'is-explicit'
 
-import { CONFIG, nameOfService, getVersionsService} from '../util'
+import { CONFIG, nameOfService, getVersionsService } from '../util'
 
 import { checkContext } from 'feathers-hooks-common/lib/services'
 
@@ -21,42 +21,42 @@ const DefaultOptions = {
 // Helper
 /******************************************************************************/
 
-function applyMasks(input, include, exclude) {
+function applyMasks (input, include, exclude) {
 
   const mask = include || exclude
   if (mask === null)
     return input
 
-  const output = mask == include ? {} : {...input}
+  const output = mask === include ? {} : {...input}
 
   mask.forEach(field => {
-    if (field in input && mask == include)
+    if (field in input && mask === include)
       output[field] = input[field]
 
-    else if (field in input && mask == exclude)
+    else if (field in input && mask === exclude)
       delete output[field]
   })
 
-  //only return data if there's any to return
+  // only return data if there's any to return
   return Object.keys(output).length === 0 ? null : output
 }
 
-function validateOptions(includeMask, excludeMask, limit, saveInterval) {
+function validateOptions (includeMask, excludeMask, limit, saveInterval) {
 
   if (includeMask !== null && !is(includeMask, Array))
-    throw new Error('includeMask, if provided, must be an Array.')
+    throw new GeneralError('includeMask, if provided, must be an Array.')
 
   if (excludeMask !== null && !is(excludeMask, Array))
-    throw new Error('excludeMask, if provided, must be an Array.')
+    throw new GeneralError('excludeMask, if provided, must be an Array.')
 
   if (includeMask && excludeMask)
-    throw new Error('you may only supply an excludeMask OR and includeMask.')
+    throw new GeneralError('you may only supply an excludeMask OR and includeMask.')
 
   if (!is(limit, Number) || limit < 2)
-    throw new Error('limit must be a number above 1')
+    throw new GeneralError('limit must be a number above 1')
 
   if (is(saveInterval, Number) && saveInterval < 0)
-    throw new Error('saveInterval must be a number equal to or above 0')
+    throw new GeneralError('saveInterval must be a number equal to or above 0')
 
 }
 
@@ -64,14 +64,13 @@ function validateOptions(includeMask, excludeMask, limit, saveInterval) {
 // Hook
 /******************************************************************************/
 
-export default function(options = {}) {
+export default function (options = {}) {
 
-  const { includeMask, excludeMask, limit, saveInterval }
-    = { ...DefaultOptions, ...options }
+  const { includeMask, excludeMask, limit, saveInterval } = { ...DefaultOptions, ...options }
 
   validateOptions(includeMask, excludeMask, limit, saveInterval)
 
-  return async function(hook) {
+  return async function (hook) {
 
     const { params, result, app } = hook
     const service = this
@@ -82,15 +81,15 @@ export default function(options = {}) {
     const versions = getVersionsService(app)
 
     if (versions === null)
-      throw new Error('Version service not initialized.')
+      throw new GeneralError('Version service not initialized.')
 
     const { userEntityField, userIdField, idType } = versions[CONFIG]
 
     const user = params[userEntityField]
     const userId = user ? user[userIdField] : null
 
-    if (versions == service)
-      throw new Error('You can\'t add a version of a version document, smartass.')
+    if (versions === service)
+      throw new BadRequest('You can\'t add a version of a version document, smartass.')
 
     const serviceIdField = service.id
     const id = result[serviceIdField]
@@ -98,7 +97,7 @@ export default function(options = {}) {
 
     const data = applyMasks(result, includeMask, excludeMask)
 
-    //only add a version if theres some data left after the masks
+    // only add a version if theres some data left after the masks
     if (data === null)
       return
 
@@ -106,7 +105,7 @@ export default function(options = {}) {
 
       const found = await versions.find({ query })
 
-      //ensure a version exists
+      // ensure a version exists
       const version = found[0] || await versions.create({ ...query, list: [] })
 
       const { list, limit } = version
@@ -115,27 +114,27 @@ export default function(options = {}) {
 
       const latest = list[list.length - 1]
 
-      //only add a new version if the data is different
+      // only add a new version if the data is different
       if (latest && equal(data, latest.data))
         return
 
       let saved = new Date()
 
-      //If updates are being made in rapid succession, we'll combine them into
-      //one so that too many versions don't get made.
+      // If updates are being made in rapid succession, we'll combine them into
+      // one so that too many versions don't get made.
       if (latest && saved.getTime() - latest.saved.getTime() < saveInterval) {
         saved = latest.saved // combined versions still use the first update time
         list.pop()
       }
 
-      //Add data for this version
+      // Add data for this version
       list.push({
         data,
         user: user ? userId : null,
         saved
       })
 
-      //If we have more versions than the limit, remove the oldest versions
+      // If we have more versions than the limit, remove the oldest versions
       if (list.length > limit)
         list.splice(0, list.length - limit)
 

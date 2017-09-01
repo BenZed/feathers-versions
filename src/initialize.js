@@ -19,7 +19,7 @@ const DefaultConfig = {
 
 }
 
-function validateConfig(idType, serviceName, adapter, userEntityField, userIdField) {
+function validateConfig (idType, serviceName, adapter, userEntityField, userIdField) {
 
   if (!is(idType, Function))
     throw new Error('idType must be a Type declaration (typically String, Number or ObjectId)')
@@ -42,7 +42,7 @@ function validateConfig(idType, serviceName, adapter, userEntityField, userIdFie
 // Hooks
 /******************************************************************************/
 
-function castQuery(hook, next) {
+function castQuery (hook, next) {
 
   const { params } = hook
   const { query } = params
@@ -59,9 +59,9 @@ function castQuery(hook, next) {
 const internal = disallow('external')
 
 const before = {
-  all:   [ castQuery ],
+  all: [ castQuery ],
   update: [ internal ],
-  patch:  [ internal ],
+  patch: [ internal ],
   create: [ internal ],
   remove: [ internal ]
 }
@@ -70,7 +70,7 @@ const before = {
 // Service
 /******************************************************************************/
 
-export default function(config = {}) {
+export default function (config = {}) {
 
   if (!is(config, Object) || config.constructor !== Object)
     throw new Error('Configuration, if supplied, must be a plain Object.')
@@ -80,7 +80,7 @@ export default function(config = {}) {
 
   validateConfig(idType, serviceName, adapter, userEntityField, userIdField)
 
-  return function() {
+  return function () {
 
     const app = this
 

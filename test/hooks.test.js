@@ -9,6 +9,7 @@ import feathers from 'feathers'
 import versions, { addVersion, clearVersions } from '../src'
 
 chai.use(chaiAsPromised)
+
 /* global describe it beforeEach */
 
 const quickApp = (config, service = 'messages') => feathers()
@@ -18,7 +19,10 @@ const quickApp = (config, service = 'messages') => feathers()
 
 const quickService = (app, config = {}, service = 'messages') => {
 
-  const patch = addVersion(config), create = patch, update = create
+  const patch = addVersion(config)
+  const create = patch
+  const update = create
+
   const remove = clearVersions()
 
   return app.service(service)
@@ -27,12 +31,13 @@ const quickService = (app, config = {}, service = 'messages') => {
 
 describe('addVersion hook', () => {
 
-  it('requires a version service to be initialized', async () => {
+  it('requires a version service to be initialized', () => {
 
     const app = feathers()
       .configure(hooks())
 
-    const messages = app.use('messages', memory())
+    const messages = app
+      .use('messages', memory())
       .service('messages')
       .hooks({
         after: {
@@ -40,7 +45,11 @@ describe('addVersion hook', () => {
         }
       })
 
-    await expect(messages.create({ body: 'Success!'})).to.eventually.be.rejectedWith('Version service not initialized.')
+    const msg = messages.create({ body: 'Success!' })
+
+    return expect(msg)
+      .to.eventually.be
+      .rejectedWith('Version service not initialized.')
 
   })
 
@@ -50,7 +59,8 @@ describe('addVersion hook', () => {
 
     const add = addVersion()
 
-    const before = { all: add }, after = before
+    const before = { all: add }
+    const after = before
 
     let messages = app.use('messages', memory())
       .service('messages')
@@ -69,16 +79,15 @@ describe('addVersion hook', () => {
       .service('messages')
       .hooks({ after })
 
-    await expect(messages.create({ body: 'Success!'})).to.eventually.be.fulfilled
-    await expect(messages.patch(0, { body: 'Horray!'})).to.eventually.be.fulfilled
-    await expect(messages.update(0, { body: 'Fantastic!'})).to.eventually.be.fulfilled
+    await expect(messages.create({ body: 'Success!' })).to.eventually.be.fulfilled
+    await expect(messages.patch(0, { body: 'Horray!' })).to.eventually.be.fulfilled
+    await expect(messages.update(0, { body: 'Fantastic!' })).to.eventually.be.fulfilled
 
     err = 'The \'add-version\' hook can only be used on the \'["update","patch","create"]\' service method(s).'
 
     await expect(messages.find({})).to.eventually.be.rejectedWith(err)
     await expect(messages.get(0)).to.eventually.be.rejectedWith(err)
     await expect(messages.remove(0)).to.eventually.be.rejectedWith(err)
-
 
   })
 
@@ -92,7 +101,7 @@ describe('addVersion hook', () => {
 
     const { id } = message
 
-    const version = await versions.find({ document: id, service: 'messages'})
+    const version = await versions.find({ document: id, service: 'messages' })
 
     assert.deepEqual(message, version[0].list[0].data)
 

@@ -31,7 +31,7 @@ describe('Service Configuration', () => {
     for (const serviceName of INVALID)
       expect(() => quickApp({ serviceName })).to.throw('serviceName must be a non-blank string.')
 
-    expect(() => quickApp({ serviceName: 'history'})).to.not.throw()
+    expect(() => quickApp({ serviceName: 'history' })).to.not.throw()
   })
 
   it('userEntityField must be a string, if supplied', () => {
