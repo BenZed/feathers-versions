@@ -25,9 +25,9 @@ function applyMasks (input, include, exclude) {
 
   const mask = include || exclude
   if (mask === null)
-    return input
+    return { ...input }
 
-  const output = mask === include ? {} : {...input}
+  const output = mask === include ? {} : { ...input }
 
   mask.forEach(field => {
     if (field in input && mask === include)
@@ -52,10 +52,10 @@ function validateOptions (includeMask, excludeMask, limit, saveInterval) {
   if (includeMask && excludeMask)
     throw new GeneralError('you may only supply an excludeMask OR and includeMask.')
 
-  if (!is(limit, Number) || limit < 2)
+  if (is(limit) && (!is(limit, Number) || limit < 2))
     throw new GeneralError('limit must be a number above 1')
 
-  if (is(saveInterval, Number) && saveInterval < 0)
+  if (is(saveInterval) && (!is(saveInterval, Number) || saveInterval < 0))
     throw new GeneralError('saveInterval must be a number equal to or above 0')
 
 }
@@ -92,57 +92,65 @@ export default function (options = {}) {
       throw new BadRequest('You can\'t add a version of a version document, smartass.')
 
     const serviceIdField = service.id
-    const id = result[serviceIdField]
-    const query = { document: idType(id), service: serviceName }
 
-    const data = applyMasks(result, includeMask, excludeMask)
+    const results = Array.isArray(result) ? result : [ result ]
 
-    // only add a version if theres some data left after the masks
-    if (data === null)
-      return
+    for (const doc of results) {
 
-    try {
+      const id = doc[serviceIdField]
+      const query = { document: idType(id), service: serviceName }
 
-      const found = await versions.find({ query })
+      const data = applyMasks(doc, includeMask, excludeMask)
 
-      // ensure a version exists
-      const version = found[0] || await versions.create({ ...query, list: [] })
-
-      const { list, limit } = version
-
-      const id = version[serviceIdField]
-
-      const latest = list[list.length - 1]
-
-      // only add a new version if the data is different
-      if (latest && equal(data, latest.data))
+      // only add a version if theres some data left after the masks
+      if (data === null)
         return
 
-      let saved = new Date()
+      try {
 
-      // If updates are being made in rapid succession, we'll combine them into
-      // one so that too many versions don't get made.
-      if (latest && saved.getTime() - latest.saved.getTime() < saveInterval) {
-        saved = latest.saved // combined versions still use the first update time
-        list.pop()
+        let [ version ] = await versions.find({ query })
+
+        // ensure a version exists
+        if (!version)
+          version = await versions.create({ ...query, list: [] })
+
+        const { list } = version
+
+        const id = version[serviceIdField]
+
+        const latest = list[list.length - 1]
+
+        // only add a new version if the data is different
+        if (latest && equal(data, latest.data))
+          return
+
+        let saved = new Date()
+
+        // If updates are being made in rapid succession, we'll combine them into
+        // one so that too many versions don't get made.
+        if (saveInterval > 0 && latest && saved.getTime() - latest.saved.getTime() < saveInterval) {
+          saved = latest.saved // combined versions still use the first update time
+          list.pop()
+        }
+
+        // Add data for this version
+        list.push({
+          data,
+          user: user ? userId : null,
+          saved
+        })
+
+        // If we have more versions than the limit, remove the oldest versions
+        if (list.length > limit)
+          list.splice(0, list.length - limit)
+
+        await versions.patch(id, { list })
+
+      } catch (err) {
+
+        throw new BadRequest(err)
+
       }
-
-      // Add data for this version
-      list.push({
-        data,
-        user: user ? userId : null,
-        saved
-      })
-
-      // If we have more versions than the limit, remove the oldest versions
-      if (list.length > limit)
-        list.splice(0, list.length - limit)
-
-      await versions.patch(id, { list })
-
-    } catch (err) {
-
-      throw new BadRequest(err)
 
     }
 
