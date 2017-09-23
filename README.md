@@ -15,9 +15,9 @@ The following assumes you're familiar with [feathers.js](http://www.feathersjs.c
 
 ## Install
 
-```
+`
 npm install feathers-versions
-```
+`
 
 ## Set Up Versions Service
 
@@ -37,11 +37,11 @@ const app = feathers()
 ## Set up a Service that will use Versioning
 
 Once the version service has been set up, you need to add a couple
-of ```hooks``` to any ```service``` that you want to use versions.
+of `hooks` to any `service` that you want to use versions.
 
-The ```addVersion``` hook can only be placed as ```after``` ```patch```, ```create``` and ```update``` hooks, and typically you'd want them on all three.
+The `addVersion` hook can only be placed as `after` `patch`, `create` and `update` hooks, and typically you'd want them on all three.
 
-The ```clearVersions``` can only be placed as a ```after``` ```remove``` hook.
+The `clearVersions` can only be placed as a `after` `remove` hook.
 
 ```js
 
@@ -110,11 +110,11 @@ ___
 
 The service configuration comes with a couple of options, most importantly the *adapter* field:
 
-## ```idType``` and ```adapter```
+## `idType` and `adapter`
 
-If you don't provide a a database adapter, ```feathers-versions``` will use ```feathers-memory``` by default, which probably won't be very useful.
+If you don't provide a a database adapter, `feathers-versions` will use `feathers-memory` by default, which probably won't be very useful.
 
-idType is the constructor for the dataType that your id will be in. ```Number``` by default. This is important to set if you are using service adapters that don't user strings or numbers as ids, like mongodb.
+idType is the constructor for the dataType that your id will be in. `Number` by default. This is important to set if you are using service adapters that don't user strings or numbers as ids, like mongodb.
 
 To set the versions service to use mongodb:
 
@@ -149,7 +149,7 @@ MongoClient.connect(MONGO_DB_URL)
 
 ```
 
-## ```serviceName```
+## `serviceName`
 
 By default, the service name for the versions service will simply be *versions*.
 If you'd like it to be something else, set this option:
@@ -169,34 +169,34 @@ const app = feathers()
 const historyService = app.service('history')
 ```
 
-## ```userEntityField``` and ```userIdField```
+## `userEntityField` and `userIdField`
 
 These fields are used for getting a authenticated user object. If a user patches
-an document that uses versioning, ```feathers-versions``` will save that users id with
+an document that uses versioning, `feathers-versions` will save that users id with
 the version data.
 
-By default ```userEntityField``` is _user_ and ```userIdField``` is *_id*
+By default `userEntityField` is _user_ and `userIdField` is *_id*
 
 ___
-# ```addVersion``` Hook Configuration
+# `addVersion` Hook Configuration
 
 There are a couple of options when adding version hooks to documents:
 
-## ```limit```
+## `limit`
 
 A limit to how many versions can be stored. If the limit is reached, the oldest
 versions will be deleted to make room for new ones. Default is _1000_.
 
-## ```saveInterval```
+## `saveInterval`
 
-If set, ```saveInteval``` should be a number in milliseconds. New versions added in
+If set, `saveInteval` should be a number in milliseconds. New versions added in
 less than the set number of milliseconds will be collapsed together. This is so that
 if multiple changes are made frequently, they'll be considered one version. By default,
 a version will be created with every patch or update.
 
-## ```excludeMask``` and ```includeMask```
+## `excludeMask` and `includeMask`
 
-You should set EITHER ```excludeMask``` or ```includeMask```, not both, and they
+You should set EITHER `excludeMask` or `includeMask`, not both, and they
 should be an array of strings, representing field names.
 
 These fields will mask the data that gets saved to a version, so that redundant fields
@@ -204,11 +204,51 @@ are ignored.
 
 ___
 
-## ```clearVersions``` Hook Configuration
+# `clearVersions` Hook Configuration
 
-Currently, the ```clearVersions``` hook doesn't take a configuration.
-
+The `clearVersions` hook currently receives no configuration.
 ___
+
+# `getVersion` helper method.
+
+`feathers-versions` also exports a helper method called `getVersion`
+
+It simplifies getting the version data for a specific document.
+
+```js
+
+import { getVersion } from 'feathers-versions'
+import app from './app' // assume we have a properly set up app here
+
+void async function test () {
+
+  const articles = app.service('articles')
+
+  const doc = await articles.create({ body: 'Informed opinion.', author: 'Some Guy' })
+
+  let docVersions
+  docVersions = await getVersion(app, 'articles', doc.id)
+  // OR, getVersion can also be bound to app for readability
+  docVersions = await app::getVersion('articles', doc.id)
+
+  console.log(docVersions) /*
+  {
+    id: 0,
+    document: 0,
+    service: 'articles',
+    list: [{
+      user: null,
+      updated: [Date],
+      data: { body: 'Informed opinion.', author: 'Some Guy' }
+    }]
+
+  }
+  */
+}
+
+
+
+```
 
 # Further Considerations
 

@@ -1,33 +1,16 @@
 import chai, { expect, assert } from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import is from 'is-explicit'
 
 import hooks from 'feathers-hooks'
 import memory from 'feathers-memory'
 import feathers from 'feathers'
 
-import versions, { addVersion, clearVersions } from '../src'
+import { addVersion, clearVersions, getVersion } from '../src'
+import { quickApp, quickService } from './commons'
 
 chai.use(chaiAsPromised)
 
-/* global describe it beforeEach */
-
-const quickApp = (config, service = 'messages') => feathers()
-  .configure(hooks())
-  .configure(versions())
-  .use(service, memory())
-
-const quickService = (app, config = {}, service = 'messages') => {
-
-  const patch = addVersion(config)
-  const create = patch
-  const update = create
-
-  const remove = clearVersions()
-
-  return app.service(service)
-    .hooks({ after: { patch, create, update, remove } })
-}
+/* global describe it */
 
 describe('addVersion hook', done => {
 
@@ -192,21 +175,102 @@ describe('addVersion hook', done => {
 
   describe('includeMask', () => {
 
-    it('cannot be defined with an excludeMask')
+    it('cannot be defined with an excludeMask', () => {
+      const app = quickApp()
 
-    it('must be an array of strings')
+      expect(() => quickService(app, { excludeMask: ['_id', 'name'], includeMask: ['data'] }))
+        .to.throw('you may only supply excludeMask OR includeMask')
+    })
 
-    it('limits data saved to a version by including fields')
+    it('must be an array of strings', async () => {
+      const app = quickApp()
+
+      const excludeMasksBad = [
+        [], [1], [1, false, Symbol('not-a-string')], [() => 'not a string', 1], ['string', /notAString/],
+        'string', {}, false, Infinity
+      ]
+
+      for (const excludeMask of excludeMasksBad)
+        expect(() => quickService(app, { excludeMask }))
+          .to.throw('excludeMask, if provided, must be an Array of strings.')
+
+      const excludeMasksGood = [
+        ['fine'], ['1', 's09', '', '100'], null, undefined
+      ]
+
+      for (const excludeMask of excludeMasksGood)
+        expect(() => quickService(app, { excludeMask }))
+          .to.not.throw(Error)
+
+    })
+
+    it('masks data saved to a version by including fields', async () => {
+
+      const app = quickApp()
+
+      const messages = quickService(app, { includeMask: [ 'body' ] })
+
+      const msg = await messages.create({ created: new Date(), body: 'New message' })
+
+      await messages.patch(msg.id, { body: 'Patched Message' })
+
+      const version = await app::getVersion('messages', msg.id)
+
+      const data = version.list.map(item => item.data)
+
+      assert.deepEqual(data, [ { body: 'New message' }, { body: 'Patched Message' } ])
+
+    })
 
   })
 
   describe('excludeMask', () => {
 
-    it('cannot be defined with an includeMask')
+    it('cannot be defined with an includeMask', () => {
+      const app = quickApp()
 
-    it('must be an array of strings')
+      expect(() => quickService(app, { excludeMask: ['_id', 'name'], includeMask: ['data'] }))
+        .to.throw('you may only supply excludeMask OR includeMask')
+    })
 
-    it('limits data saved to a version by excluding fields')
+    it('must be an array of strings', async () => {
+      const app = quickApp()
+
+      const includeMasksBad = [
+        [], [1], [1, false, Symbol('not-a-string')], [() => 'not a string', 1], ['string', /notAString/],
+        'string', {}, false, Infinity
+      ]
+
+      for (const includeMask of includeMasksBad)
+        expect(() => quickService(app, { includeMask }))
+          .to.throw('includeMask, if provided, must be an Array of strings.')
+
+      const includeMasksGood = [
+        ['fine'], ['1', 's09', '', '100'], null, undefined
+      ]
+
+      for (const includeMask of includeMasksGood)
+        expect(() => quickService(app, { includeMask }))
+          .to.not.throw(Error)
+
+    })
+
+    it('masks data saved to a version by excluding fields', async () => {
+      const app = quickApp()
+
+      const messages = quickService(app, { excludeMask: [ 'id', 'created' ] })
+
+      const msg = await messages.create({ created: new Date(), body: 'New message' })
+
+      await messages.patch(msg.id, { body: 'Patched Message' })
+
+      const version = await app::getVersion('messages', msg.id)
+
+      const data = version.list.map(item => item.data)
+
+      assert.deepEqual(data, [ { body: 'New message' }, { body: 'Patched Message' } ])
+
+    })
 
   })
 

@@ -67,4 +67,12 @@ describe('Service Configuration', () => {
 
   })
 
+  it('only one versions service can be created per app', () => {
+
+    const app = quickApp()
+
+    expect(() => app.configure(versions())).to.throw('Only one versions service can be initialized per app.')
+
+  })
+
 })

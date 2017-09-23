@@ -1,8 +1,8 @@
 import { BadRequest, GeneralError } from 'feathers-errors'
 import equal from 'deep-equal'
-import is from 'is-explicit'
+import is from 'is-explicit/this'
 
-import { CONFIG, nameOfService, getVersionsService } from '../util'
+import { CONFIG, nameOfService, getVersionService } from '../util'
 
 import { checkContext } from 'feathers-hooks-common/lib/services'
 
@@ -21,19 +21,21 @@ const DefaultOptions = {
 // Helper
 /******************************************************************************/
 
-function applyMasks (input, include, exclude) {
+function applyMasks (include, exclude) {
+
+  const doc = this
 
   const mask = include || exclude
   if (mask === null)
-    return { ...input }
+    return { ...doc }
 
-  const output = mask === include ? {} : { ...input }
+  const output = mask === include ? {} : { ...doc }
 
   mask.forEach(field => {
-    if (field in input && mask === include)
-      output[field] = input[field]
+    if (field in doc && mask === include)
+      output[field] = doc[field]
 
-    else if (field in input && mask === exclude)
+    else if (field in doc && mask === exclude)
       delete output[field]
   })
 
@@ -43,19 +45,19 @@ function applyMasks (input, include, exclude) {
 
 function validateOptions (includeMask, excludeMask, limit, saveInterval) {
 
-  if (includeMask !== null && !is(includeMask, Array))
-    throw new GeneralError('includeMask, if provided, must be an Array.')
+  if (includeMask::is() && !includeMask::is.arrayOf(String))
+    throw new GeneralError('includeMask, if provided, must be an Array of strings.')
 
-  if (excludeMask !== null && !is(excludeMask, Array))
-    throw new GeneralError('excludeMask, if provided, must be an Array.')
+  if (excludeMask::is() && !excludeMask::is.arrayOf(String))
+    throw new GeneralError('excludeMask, if provided, must be an Array of strings.')
 
   if (includeMask && excludeMask)
-    throw new GeneralError('you may only supply an excludeMask OR and includeMask.')
+    throw new GeneralError('you may only supply excludeMask OR includeMask.')
 
-  if (is(limit) && (!is(limit, Number) || limit < 2))
+  if (limit::is() && (!limit::is(Number) || limit < 2))
     throw new GeneralError('limit must be a number above 1')
 
-  if (is(saveInterval) && (!is(saveInterval, Number) || saveInterval < 0))
+  if (saveInterval::is() && (!saveInterval::is(Number) || saveInterval < 0))
     throw new GeneralError('saveInterval must be a number equal to or above 0')
 
 }
@@ -72,13 +74,12 @@ export default function (options = {}) {
 
   return async function (hook) {
 
-    const { params, result, app } = hook
-    const service = this
+    const { params, result, app, service } = hook
 
     checkContext(hook, 'after', ['update', 'patch', 'create'], 'add-version')
 
-    const serviceName = nameOfService(app, service)
-    const versions = getVersionsService(app)
+    const serviceName = app::nameOfService(service)
+    const versions = app::getVersionService()
 
     if (versions === null)
       throw new GeneralError('Version service not initialized.')
@@ -93,14 +94,14 @@ export default function (options = {}) {
 
     const serviceIdField = service.id
 
-    const results = Array.isArray(result) ? result : [ result ]
+    const results = result::is(Array) ? result : [ result ]
 
     for (const doc of results) {
 
       const id = doc[serviceIdField]
       const query = { document: idType(id), service: serviceName }
 
-      const data = applyMasks(doc, includeMask, excludeMask)
+      const data = doc::applyMasks(includeMask, excludeMask)
 
       // only add a version if theres some data left after the masks
       if (data === null)

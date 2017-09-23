@@ -1,6 +1,6 @@
 import memory from 'feathers-memory'
 import { disallow } from 'feathers-hooks-common'
-import CONFIG from './util/version-service-config-symbol'
+import { CONFIG, getVersionService } from './util'
 import is from 'is-explicit'
 
 /******************************************************************************/
@@ -83,6 +83,9 @@ export default function (config = {}) {
   return function () {
 
     const app = this
+
+    if (app::getVersionService() !== null)
+      throw new Error('Only one versions service can be initialized per app.')
 
     app.use('/' + serviceName, adapter || memory())
 

@@ -1,6 +1,7 @@
-import { CONFIG, nameOfService, getVersionsService } from '../util'
+import { nameOfService, getVersion, getVersionService } from '../util'
 
 import { checkContext } from 'feathers-hooks-common/lib/services'
+import is from 'is-explicit/this'
 
 /******************************************************************************/
 // Exports
@@ -15,40 +16,20 @@ export default function () {
 
     checkContext(hook, 'after', 'remove', 'clear-versions')
 
-    const versions = getVersionsService(app)
+    const versions = app::getVersionService()
     if (versions === null)
       throw new Error('Version service not initialized.')
 
-    const results = Array.isArray(result) ? result : [ result ]
+    const results = result::is(Array) ? result : [ result ]
 
     for (const doc of results) {
 
-      const id = doc[service.id]
+      const name = app::nameOfService(service)
 
-      const query = {
-        document: versions[CONFIG].idType(id),
-        service: nameOfService(app, service)
-      }
+      const version = await app::getVersion(name, doc)
+      if (version)
+        await versions.remove(version[versions.id])
 
-      try {
-
-        // if the document can be found, we continue without removing it's versions
-        // This would happen if there was an error during the remove hook, such as
-        // a permissions failure, or if the document was soft-deleted
-        await service.get(id)
-
-      } catch (err) {
-
-        if (err.message !== `No record found for id '${id}'`)
-          throw err
-
-        // if we cant find the service document, it's because removing it was
-        // successful, and we'll continue with removing all of it's versions
-        const [ version ] = await versions.find({ query })
-        if (version)
-          await versions.remove(version[versions.id])
-
-      }
     }
   }
 }
