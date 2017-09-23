@@ -11,8 +11,7 @@ export default function () {
 
   return async function (hook) {
 
-    const { result, app } = hook
-    const service = this
+    const { result, app, service } = hook
 
     checkContext(hook, 'after', 'remove', 'clear-versions')
 

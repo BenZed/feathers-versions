@@ -5,8 +5,9 @@ import hooks from 'feathers-hooks'
 import memory from 'feathers-memory'
 import feathers from 'feathers'
 
-import { addVersion, clearVersions, getVersion } from '../src'
+import versions, { addVersion, clearVersions, getVersion } from '../src'
 import { quickApp, quickService } from './commons'
+import { iff } from 'feathers-hooks-common'
 
 chai.use(chaiAsPromised)
 
@@ -352,6 +353,28 @@ describe('clearVersions hook', () => {
       const [ version ] = await app.service('versions').find({ query: { document: id, service: 'messages' } })
       assert.equal(version, undefined, 'Version not deleted!')
     }
+
+  })
+
+  it('composes without error', async () => {
+
+    const app = feathers()
+      .configure(hooks())
+      .configure(versions())
+
+    const messages = app
+      .use('messages', memory())
+      .service('messages')
+      .hooks({
+        after: {
+          create: addVersion(),
+          remove: iff(hook => true, clearVersions())
+        }
+      })
+
+    await messages.create([{ body: 'HAHA' }, { body: 'Hammertime' }])
+
+    await expect(messages.remove(null)).to.eventually.be.fulfilled
 
   })
 
