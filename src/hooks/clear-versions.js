@@ -1,5 +1,4 @@
 import { nameOfService, getVersion, getVersionService } from '../util'
-
 import { checkContext } from 'feathers-hooks-common/lib/services'
 import is from 'is-explicit/this'
 
