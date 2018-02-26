@@ -64,7 +64,13 @@ export default async function getVersion (...args) {
     $limit: 1
   }
 
-  const [ version ] = await versions.find({ query })
+  let version = await versions.find({ query })
+
+  // Normalize the results of .find() into an array taking into account
+  if (version::is(Array))
+    [ version ] = version
+  else
+    [ version ] = version.data
 
   return version || null
 

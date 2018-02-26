@@ -108,8 +108,13 @@ export default function (options = {}) {
         return
 
       try {
+        let version = await versions.find({ query })
 
-        let [ version ] = await versions.find({ query })
+        // Normalize the results of .find() into an array
+        if (version::is(Array))
+          [ version ] = version
+        else
+          [ version ] = version.data
 
         // ensure a version exists
         if (!version)
